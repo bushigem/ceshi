@@ -1,23 +1,20 @@
-# 基础镜像
+# -------------- 基础阶段 --------------
 FROM openjdk:17
 
-# 维护者信息
-MAINTAINER youlai <youlaitech@163.com>
+LABEL maintainer="youlai <youlaitech@163.com>"
 
-# 设置时区（Debian直接使用环境变量）
+# 时区
 ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# 在运行时自动挂载 /tmp 目录为匿名卷
+# 匿名卷
 VOLUME /tmp
 
-# 添加应用
-ADD target/youlai-boot.jar app.jar
+# 构建参数：jar 文件名
+ARG JAR_FILE=target/youlai-boot.jar
 
-# 启动命令
-CMD java \
-    -Xms512m -Xmx512m \
-    -Djava.security.egd=file:/dev/./urandom \
-    -jar /app.jar
+# 复制并改名
+COPY ${JAR_FILE} /app.jar
 
-# 暴露端口
 EXPOSE 8989
+ENTRYPOINT ["java", "-Xms512m", "-Xmx512m", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app.jar"]

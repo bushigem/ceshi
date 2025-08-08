@@ -11,13 +11,13 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - LANG= en_US.UTF-8
-      - MYSQL_ROOT_PASSWORD=123456 #设置 root 用户的密码
+      - MYSQL_ROOT_PASSWORD=339199 #设置 root 用户的密码
     volumes:
       - ./mysql/conf/my.cnf:/etc/my.cnf # 挂载 my.cnf 文件到容器的指定路径
       - ./mysql/data:/var/lib/mysql # 持久化 MySQL 数据
       - ../sql/mysql:/docker-entrypoint-initdb.d # 初始化 SQL 脚本目录
     ports:
-      - 3306:3306
+      - 3307:3306
     networks:
       - youlai-boot # 加入 "youlai-boot" 网络
 
