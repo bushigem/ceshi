@@ -34,27 +34,31 @@ jobs:
         run: |
           echo "${{ secrets.SSH_KEY }}" > my-key
           chmod 600 my-key
+          ls -l my-key  # 检查文件是否存在和权限
 
       - name: Copy image to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key_path: my-key
+          key_path: /github/workspace/my-key  # 使用绝对路径
           port: 22
           source: "youli-app.tar"
           target: "/tmp"
           debug: true
-          use_insecure_cipher: true
+          use_insecure_cipher: true  # 强制使用旧的加密算法以兼容 ssh-rsa 密钥
+        env:
+          # 确保工作区目录正确挂载到 Docker 容器中
+          VOLUME: /github/workspace
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key_path: my-key
+          key_path: /github/workspace/my-key  # 使用绝对路径
           port: 22
-          use_insecure_cipher: true
+          use_insecure_cipher: true  # 强制使用旧的加密算法以兼容 ssh-rsa 密钥
           script: |
             docker load < /tmp/youli-app.tar
             docker stop youli-app || true
@@ -63,3 +67,6 @@ jobs:
               --name youli-app \
               -p 8989:8989 \
               youli-app
+        env:
+          # 确保工作区目录正确挂载到 Docker 容器中
+          VOLUME: /github/workspace
