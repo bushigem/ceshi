@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build jar with Maven in backend
-        working-directory: ./backend  # 使用官方推荐方式指定目录
+        working-directory: ./backend
         run: mvn -B package -DskipTests
 
       - name: Build Docker image
@@ -28,7 +28,7 @@ jobs:
         run: docker build --build-arg JAR_FILE=target/youlai-boot.jar -t youli-app .
 
       - name: Save image as tar
-        run: docker save youli-app > youli-app.tar  # 在根目录生成
+        run: docker save youli-app > youli-app.tar
 
       - name: Copy image to server
         uses: appleboy/scp-action@v0.1.7
@@ -36,10 +36,13 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: 22  # 显式指定端口
+          port: 22
           source: "youli-app.tar"
           target: "/tmp"
-          debug: true  # 启用调试
+          debug: true
+          # ---- 新增行 ----
+          # 强制使用旧的加密算法以兼容 ssh-rsa 密钥
+          use_insecure_cipher: true
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.0
@@ -48,6 +51,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
+          # ---- 新增行 ----
+          # 强制使用旧的加密算法以兼容 ssh-rsa 密钥
+          use_insecure_cipher: true
           script: |
             docker load < /tmp/youli-app.tar
             docker stop youli-app || true
