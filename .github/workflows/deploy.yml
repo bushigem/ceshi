@@ -30,18 +30,22 @@ jobs:
       - name: Save image as tar
         run: docker save youli-app > youli-app.tar
 
-      - name: Copy image to server
-        uses: appleboy/scp-action@v1.0.0
+      # --- 关键修改：使用 rsync 代替 scp ---
+      - name: Copy image to server with rsync
+        uses: easingthemes/ssh-deploy@main
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          source: "youli-app.tar"
-          target: "/tmp"
-          debug: true
-          # --- 这是现在必须的关键修改 ---
-          command_timeout: 30m # 将命令超时设置为 30 分钟
+          # 传入私钥
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          # rsync 参数: -a 表示归档模式, -v 表示详细输出, -z 表示压缩
+          ARGS: "-avz"
+          # 源文件
+          SOURCE: "youli-app.tar"
+          # 远程服务器 IP
+          REMOTE_HOST: ${{ secrets.SERVER_IP }}
+          # 远程服务器用户
+          REMOTE_USER: ${{ secrets.SERVER_USER }}
+          # 目标路径
+          TARGET: "/tmp"
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
