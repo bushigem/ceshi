@@ -30,21 +30,17 @@ jobs:
       - name: Save image as tar
         run: docker save youli-app > youli-app.tar
 
-      # --- 关键修改：使用 rsync 代替 scp ---
       - name: Copy image to server with rsync
         uses: easingthemes/ssh-deploy@main
         with:
-          # 传入私钥
           SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          # rsync 参数: -a 表示归档模式, -v 表示详细输出, -z 表示压缩
-          ARGS: "-avz"
-          # 源文件
+          # 关键修改：
+          # --progress: 强制显示详细的传输进度
+          # --bwlimit=10000: 将带宽限制在 10000 KB/s (约 10 MB/s)，这是解决问题的关键
+          ARGS: "-avz --progress --bwlimit=10000"
           SOURCE: "youli-app.tar"
-          # 远程服务器 IP
           REMOTE_HOST: ${{ secrets.SERVER_IP }}
-          # 远程服务器用户
           REMOTE_USER: ${{ secrets.SERVER_USER }}
-          # 目标路径
           TARGET: "/tmp"
 
       - name: Deploy on server
@@ -57,15 +53,15 @@ jobs:
           script: |
             echo "--- Loading Docker image from /tmp/youli-app.tar ---"
             docker load < /tmp/youli-app.tar
-
+            
             echo "--- Stopping and removing old container (if it exists) ---"
             docker stop youli-app || true
             docker rm youli-app || true
-
+            
             echo "--- Starting new container ---"
             docker run -d --restart=unless-stopped \
               --name youli-app \
               -p 8989:8989 \
               youli-app
-            
+              
             echo "--- Deployment finished successfully ---"
