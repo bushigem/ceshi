@@ -20,17 +20,15 @@ jobs:
           distribution: 'temurin'
 
       - name: Build jar with Maven in backend
-        run: |
-          cd backend
-          mvn -B package -DskipTests
+        working-directory: ./backend  # 使用官方推荐方式指定目录
+        run: mvn -B package -DskipTests
 
-      - name: Build Docker image in backend
-        run: |
-          cd backend
-          docker build --build-arg JAR_FILE=target/youlai-boot.jar -t youli-app .
+      - name: Build Docker image
+        working-directory: ./backend
+        run: docker build --build-arg JAR_FILE=target/youlai-boot.jar -t youli-app .
 
       - name: Save image as tar
-        run: docker save youli-app > youli-app.tar
+        run: docker save youli-app > youli-app.tar  # 在根目录生成
 
       - name: Copy image to server
         uses: appleboy/scp-action@v0.1.7
@@ -38,8 +36,10 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
+          port: 22  # 显式指定端口
           source: "youli-app.tar"
           target: "/tmp"
+          debug: true  # 启用调试
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.0
@@ -47,8 +47,12 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
+          port: 22
           script: |
             docker load < /tmp/youli-app.tar
             docker stop youli-app || true
             docker rm youli-app || true
-            docker run -d --restart=unless-stopped --name youli-app -p 8989:8989 youli-app
+            docker run -d --restart=unless-stopped \
+              --name youli-app \
+              -p 8989:8989 \
+              youli-app
