@@ -40,9 +40,7 @@ jobs:
           source: "youli-app.tar"
           target: "/tmp"
           debug: true
-          # ---- 新增行 ----
-          # 强制使用旧的加密算法以兼容 ssh-rsa 密钥
-          use_insecure_cipher: true
+          use_insecure_cipher: true  # 强制使用旧的加密算法以兼容 ssh-rsa 密钥
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.0
@@ -51,9 +49,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          # ---- 新增行 ----
-          # 强制使用旧的加密算法以兼容 ssh-rsa 密钥
-          use_insecure_cipher: true
+          use_insecure_cipher: true  # 强制使用旧的加密算法以兼容 ssh-rsa 密钥
           script: |
             docker load < /tmp/youli-app.tar
             docker stop youli-app || true
