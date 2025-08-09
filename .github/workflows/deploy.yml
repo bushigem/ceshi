@@ -11,10 +11,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        # 使用最新的 v4 版本
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        # 使用最新的 v4 版本
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -30,37 +32,35 @@ jobs:
       - name: Save image as tar
         run: docker save youli-app > youli-app.tar
 
-      # 关键修改：不再将密钥写入文件，而是直接传递给 Action
-      # 这样可以避免所有文件权限问题
       - name: Copy image to server
-        uses: appleboy/scp-action@v0.1.7
+        # 使用最新主版本，不再需要不安全的加密选项
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_IP }}
+          # 确保 SERVER_USER 的值是 'root'
           username: ${{ secrets.SERVER_USER }}
-          # --- 使用 'key' 而不是 'key_path' ---
+          # 确保 SSH_KEY 包含你的 Ed25519 私钥
           key: ${{ secrets.SSH_KEY }}
           port: 22
           source: "youli-app.tar"
           target: "/tmp"
           debug: true
-          # 强制使用旧的加密算法以兼容您的 ssh-rsa 密钥
-          use_insecure_cipher: true
 
       - name: Deploy on server
-        uses: appleboy/ssh-action@v1.0.0
+        # 使用最新主版本，不再需要不安全的加密选项
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
+          # 确保 SERVER_USER 的值是 'root'
           username: ${{ secrets.SERVER_USER }}
-          # --- 使用 'key' 而不是 'key_path' ---
+          # 确保 SSH_KEY 包含你的 Ed25519 私钥
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          # 强制使用旧的加密算法以兼容您的 ssh-rsa 密钥
-          use_insecure_cipher: true
           script: |
-            echo "--- Loading Docker image ---"
+            echo "--- Loading Docker image from /tmp/youli-app.tar ---"
             docker load < /tmp/youli-app.tar
 
-            echo "--- Stopping and removing old container ---"
+            echo "--- Stopping and removing old container (if it exists) ---"
             docker stop youli-app || true
             docker rm youli-app || true
 
@@ -70,4 +70,4 @@ jobs:
               -p 8989:8989 \
               youli-app
             
-            echo "--- Deployment finished ---"
+            echo "--- Deployment finished successfully ---"
