@@ -1,0 +1,14 @@
+# 忽略 Maven 的构建产物目录
+target/
+
+# 忽略 Git 的历史记录
+.git
+.gitignore
+
+# 忽略 IDE 的配置文件
+.idea/
+*.iml
+.vscode/
+
+# 忽略日志文件
+*.log

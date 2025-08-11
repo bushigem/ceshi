@@ -25,7 +25,7 @@ jobs:
 
       - name: Build Docker image
         working-directory: ./backend
-        run: docker build --build-arg JAR_FILE=target/youlai-boot.jar -t youli-app .
+        run: docker build -t youli-app .
 
       - name: Save image as tar
         run: docker save youli-app > youli-app.tar
